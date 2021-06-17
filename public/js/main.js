@@ -17,6 +17,7 @@ socket.emit('joinRoom', { username, room });
 socket.on('roomUsers', ({ room, users }) => {
   outputRoomName(room);
   outputUsers(users);
+  console.log(users)
 });
 
 // Message from server
@@ -75,16 +76,36 @@ function outputUsers(users) {
   userList.innerHTML = '';
   users.forEach((user) => {
     const li = document.createElement('li');
+    const chatButton = document.createElement('button')
+
+    chatButton.setAttribute('data-id', user.id)
     li.innerText = user.username;
+    chatButton.classList.add('privateBtn')
+    chatButton.innerText = `Conversar`
+
+    chatButton.addEventListener('click', (e) => {
+      sendPrivateMessage(user.id)
+    })
+
+    li.appendChild(chatButton)
     userList.appendChild(li);
   });
 }
 
 //Prompt the user before leave chat room
 document.getElementById('leave-btn').addEventListener('click', () => {
-  const leaveRoom = confirm('Are you sure you want to leave the chatroom?');
+  const leaveRoom = confirm('Você realmente quer sair da sala?');
   if (leaveRoom) {
     window.location = '../index.html';
   } else {
   }
 });
+
+//
+function sendPrivateMessage(id) {
+  console.log(id)
+  //socket.emit
+}
+
+//criado uma sala privada
+  //criar uma nova janela
