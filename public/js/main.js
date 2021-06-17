@@ -3,6 +3,8 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 
+let myUserId
+
 // Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
   ignoreQueryPrefix: true,
@@ -20,9 +22,18 @@ socket.on('roomUsers', ({ room, users }) => {
   console.log(users)
 });
 
+//Welcome message from server
+socket.on('welcome-message', (res) => {
+  myUserId = res.userId
+  console.log(myUserId)
+  outputMessage(res.message);
+
+  // Scroll down
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
 // Message from server
 socket.on('message', (message) => {
-  console.log(message);
   outputMessage(message);
 
   // Scroll down
@@ -80,14 +91,21 @@ function outputUsers(users) {
 
     chatButton.setAttribute('data-id', user.id)
     li.innerText = user.username;
-    chatButton.classList.add('privateBtn')
-    chatButton.innerText = `Conversar`
 
-    chatButton.addEventListener('click', (e) => {
-      sendPrivateMessage(user.id)
-    })
-
-    li.appendChild(chatButton)
+    if(room === 'Meet') {
+      chatButton.classList.add('privateBtn')
+      chatButton.innerText = `Conversar`
+  
+      if(myUserId === user.id) {
+        chatButton.disabled = true
+      }
+  
+      chatButton.addEventListener('click', (e) => {
+        sendPrivateMessage(user.id)
+      })
+  
+      li.appendChild(chatButton)
+    }
     userList.appendChild(li);
   });
 }
@@ -103,9 +121,17 @@ document.getElementById('leave-btn').addEventListener('click', () => {
 
 //
 function sendPrivateMessage(id) {
-  console.log(id)
-  //socket.emit
+  if(myUserId === id) return
+  socket.emit('start-private-chat', {room: room, from: myUserId, to: id})
 }
+
+socket.on('create-private-chat', ({room, from, to}) => {
+  console.log('mensagem recebida', from, to)
+
+  if(from === myUserId || to === myUserId) {
+    window.open(`/chat.html?username=${username}&room=${room}`, "_blank")
+  }
+})
 
 //criado uma sala privada
   //criar uma nova janela
