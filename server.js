@@ -19,6 +19,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const botName = 'Manda-Chat Bot ';
 
+let messages = [];
+
 // Run when client connects
 io.on('connection', (socket) => {
   socket.on('joinRoom', ({ username, room }) => {
@@ -31,6 +33,12 @@ io.on('connection', (socket) => {
       message: formatMessage(botName, 'Bem-vindo ao Manda-Chat!'),
       userId: socket.id
     });
+
+    const previousMessages = messages.filter((message) => {
+      return message.room === room;
+    });
+
+    socket.emit('previous-messages', previousMessages)
 
     // Broadcast when a user connects
     socket.broadcast
@@ -50,9 +58,12 @@ io.on('connection', (socket) => {
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
     const user = getCurrentUser(socket.id);
-    console.log(socket.id);
 
-    io.to(user.room).emit('message', formatMessage(user.username, msg));
+    const message = formatMessage(user.username, msg);
+    const messageAndRoom = { ...message, room: user.room };
+    messages.push(messageAndRoom);
+
+    io.to(user.room).emit('message', message);
   });
 
   // Runs when client disconnects
@@ -73,23 +84,29 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('start-private-chat', ({room, from, to}) => {
-    const users = getRoomUsers(room)
-    let userFrom, userTo
-    users.forEach(user => {
-      if(from === user.id) {
-        userFrom = user.username
+  socket.on('start-private-chat', ({ room, from, to }) => {
+    const users = getRoomUsers(room);
+    let userFrom, userTo;
+    users.forEach((user) => {
+      if (from === user.id) {
+        userFrom = user.username;
       }
 
       if (to === user.id) {
-        userTo = user.username
+        userTo = user.username;
       }
-    })
+    });
 
-    const privateRoomName = `PVT: ${userFrom} - ${userTo}`
+    const privateRoomName = `PVT: ${userFrom} - ${userTo}`;
 
-    io.to(room).emit('create-private-chat', {room: privateRoomName, from, to, userFrom, userTo})
-  })
+    io.to(room).emit('create-private-chat', {
+      room: privateRoomName,
+      from,
+      to,
+      userFrom,
+      userTo
+    });
+  });
 });
 
 const PORT = process.env.PORT || 3000;

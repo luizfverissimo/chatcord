@@ -3,11 +3,11 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 
-let myUserId
+let myUserId;
 
 // Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
-  ignoreQueryPrefix: true,
+  ignoreQueryPrefix: true
 });
 
 const socket = io();
@@ -19,17 +19,24 @@ socket.emit('joinRoom', { username, room });
 socket.on('roomUsers', ({ room, users }) => {
   outputRoomName(room);
   outputUsers(users);
-  console.log(users)
+  console.log(users);
 });
 
 //Welcome message from server
 socket.on('welcome-message', (res) => {
-  myUserId = res.userId
-  console.log(myUserId)
+  myUserId = res.userId;
+  console.log(myUserId);
   outputMessage(res.message);
 
   // Scroll down
   chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+//Previous message received and rendered
+socket.on('previous-messages', (previousMessages) => {
+  previousMessages.forEach((message) => {
+    outputMessage(message);
+  });
 });
 
 // Message from server
@@ -87,24 +94,24 @@ function outputUsers(users) {
   userList.innerHTML = '';
   users.forEach((user) => {
     const li = document.createElement('li');
-    const chatButton = document.createElement('button')
+    const chatButton = document.createElement('button');
 
-    chatButton.setAttribute('data-id', user.id)
+    chatButton.setAttribute('data-id', user.id);
     li.innerText = user.username;
 
-    if(room === 'Meet') {
-      chatButton.classList.add('privateBtn')
-      chatButton.innerHTML = `<i class="fas fa-comment"></i>`
-  
-      if(myUserId === user.id) {
-        chatButton.disabled = true
+    if (room === 'Meet') {
+      chatButton.classList.add('privateBtn');
+      chatButton.innerHTML = `<i class="fas fa-comment"></i>`;
+
+      if (myUserId === user.id) {
+        chatButton.disabled = true;
       }
-  
+
       chatButton.addEventListener('click', (e) => {
-        sendPrivateMessage(user.id)
-      })
-  
-      li.appendChild(chatButton)
+        sendPrivateMessage(user.id);
+      });
+
+      li.appendChild(chatButton);
     }
     userList.appendChild(li);
   });
@@ -121,28 +128,31 @@ document.getElementById('leave-btn').addEventListener('click', () => {
 
 //
 function sendPrivateMessage(id) {
-  if(myUserId === id) return
+  if (myUserId === id) return;
 
-  const confirmPvt = confirm('Você deseja iniciar uma conversa?')
+  const confirmPvt = confirm('Você deseja iniciar uma conversa?');
 
-  if(confirmPvt) {
-    socket.emit('start-private-chat', {room: room, from: myUserId, to: id})
+  if (confirmPvt) {
+    socket.emit('start-private-chat', { room: room, from: myUserId, to: id });
   }
 }
 
-socket.on('create-private-chat', ({room, from, to, userFrom, userTo}) => {
+socket.on('create-private-chat', ({ room, from, to, userFrom, userTo }) => {
+  // console.log(room, from, to, userFrom, userTo)
 
-  if(from === myUserId) {
-    window.open(`/chat.html?username=${username}&room=${room}`, "_blank")
+  if (from === myUserId) {
+    window.open(`/chat.html?username=${username}&room=${room}`, '_blank');
   }
 
-  if(to === myUserId) {
-    const confirmPvtTo = confirm(`${userFrom} deseja conversar com você. Aceitar?`)
-    if(confirmPvtTo) {
-      window.open(`/chat.html?username=${username}&room=${room}`, "_blank")
+  if (to === myUserId) {
+    const confirmPvtTo = confirm(
+      `${userFrom} deseja conversar com você. Aceitar?`
+    );
+    if (confirmPvtTo) {
+      window.open(`/chat.html?username=${username}&room=${room}`, '_blank');
     }
   }
-})
+});
 
 //criado uma sala privada
-  //criar uma nova janela
+//criar uma nova janela
