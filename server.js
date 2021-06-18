@@ -88,8 +88,7 @@ io.on('connection', (socket) => {
 
     const privateRoomName = `PVT: ${userFrom} - ${userTo}`
 
-    console.log(users)
-    io.to(room).emit('create-private-chat', {room: privateRoomName, from, to})
+    io.to(room).emit('create-private-chat', {room: privateRoomName, from, to, userFrom, userTo})
   })
 });
 

@@ -94,7 +94,7 @@ function outputUsers(users) {
 
     if(room === 'Meet') {
       chatButton.classList.add('privateBtn')
-      chatButton.innerText = `Conversar`
+      chatButton.innerHTML = `<i class="fas fa-comment"></i>`
   
       if(myUserId === user.id) {
         chatButton.disabled = true
@@ -122,14 +122,25 @@ document.getElementById('leave-btn').addEventListener('click', () => {
 //
 function sendPrivateMessage(id) {
   if(myUserId === id) return
-  socket.emit('start-private-chat', {room: room, from: myUserId, to: id})
+
+  const confirmPvt = confirm('Você deseja iniciar uma conversa?')
+
+  if(confirmPvt) {
+    socket.emit('start-private-chat', {room: room, from: myUserId, to: id})
+  }
 }
 
-socket.on('create-private-chat', ({room, from, to}) => {
-  console.log('mensagem recebida', from, to)
+socket.on('create-private-chat', ({room, from, to, userFrom, userTo}) => {
 
-  if(from === myUserId || to === myUserId) {
+  if(from === myUserId) {
     window.open(`/chat.html?username=${username}&room=${room}`, "_blank")
+  }
+
+  if(to === myUserId) {
+    const confirmPvtTo = confirm(`${userFrom} deseja conversar com você. Aceitar?`)
+    if(confirmPvtTo) {
+      window.open(`/chat.html?username=${username}&room=${room}`, "_blank")
+    }
   }
 })
 

@@ -87,6 +87,22 @@ a {
 	justify-content: space-between;
 }
 
+.chat-sidebar ul li .privateBtn {
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
+}
+
+.chat-sidebar ul li .privateBtn:disabled {
+	pointer-events: none;
+	opacity: 0.5;
+}
+
+.chat-sidebar ul li .privateBtn i {
+	color: white;
+	font-size: 18px;
+}
+
 .chat-messages {
 	padding: 30px;
 	max-height: 500px;
