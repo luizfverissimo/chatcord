@@ -70,11 +70,20 @@ a {
 	overflow-y: scroll;
 }
 
-.chat-sidebar h2 {
+.rooms {
+	width: 100%;
+	height: auto;
+	display: flex;
+	flex-direction: column;
+}
+
+.rooms a {
 	font-size: 20px;
 	background: rgba(0, 0, 0, 0.1);
 	padding: 10px;
 	margin-bottom: 20px;
+	cursor: pointer;
+	color: white;
 }
 
 .chat-sidebar h3 {

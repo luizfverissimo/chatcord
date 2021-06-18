@@ -7,7 +7,8 @@ const {
   userJoin,
   getCurrentUser,
   userLeave,
-  getRoomUsers
+  getRoomUsers,
+  getUsersByRooms
 } = require('./utils/users');
 
 const app = express();
@@ -49,10 +50,7 @@ io.on('connection', (socket) => {
       );
 
     // Send users and room info
-    io.to(user.room).emit('roomUsers', {
-      room: user.room,
-      users: getRoomUsers(user.room)
-    });
+    io.to(user.room).emit('roomUsers', getUsersByRooms());
   });
 
   // Listen for chatMessage

@@ -3,12 +3,19 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 
-let myUserId;
+let myUserId, activeRoom;
+let roomsListForTheUser = [];
 
 // Get username and room from URL
-const { username, room } = Qs.parse(location.search, {
+const { username, room, roomslist } = Qs.parse(location.search, {
   ignoreQueryPrefix: true
 });
+
+if(roomslist) {
+  outputRoomName(roomslist)
+}
+
+activeRoom = room;
 
 const socket = io();
 
@@ -16,16 +23,35 @@ const socket = io();
 socket.emit('joinRoom', { username, room });
 
 // Get room and users
-socket.on('roomUsers', ({ room, users }) => {
-  outputRoomName(room);
-  outputUsers(users);
-  console.log(users);
+socket.on('roomUsers', (roomsAndUsers) => {
+  console.log(roomsAndUsers);
+  let activeRoomUsers;
+
+  if(!Array.isArray(roomsAndUsers)) return
+
+  roomsAndUsers.forEach((room) => {
+    if (room.room === activeRoom) {
+      activeRoomUsers = room.users;
+    }
+
+    room.users.forEach((user) => {
+      if (user.id === myUserId) {
+        if (roomsListForTheUser.includes(room.room)) return
+        roomsListForTheUser.push(room.room);
+        outputRoomName(room.room)
+        return;
+      }
+    });
+  });
+
+  outputUsers(activeRoomUsers);
 });
+
+
 
 //Welcome message from server
 socket.on('welcome-message', (res) => {
   myUserId = res.userId;
-  console.log(myUserId);
   outputMessage(res.message);
 
   // Scroll down
@@ -86,7 +112,16 @@ function outputMessage(message) {
 
 // Add room name to DOM
 function outputRoomName(room) {
-  roomName.innerText = room;
+  const roomList = document.querySelector('.rooms');
+
+  const roomElement = document.createElement('a');
+  roomElement.setAttribute(
+    'href',
+    `/chat.html?username=${username}&room=${room}&roomslist=${roomsListForTheUser}`
+  );
+  roomElement.innerText = room;
+
+  roomList.appendChild(roomElement);
 }
 
 // Add users to DOM
@@ -141,7 +176,7 @@ socket.on('create-private-chat', ({ room, from, to, userFrom, userTo }) => {
   // console.log(room, from, to, userFrom, userTo)
 
   if (from === myUserId) {
-    window.open(`/chat.html?username=${username}&room=${room}`, '_blank');
+    window.location = `/chat.html?username=${username}&room=${room}&roomslist=${roomsListForTheUser}`;
   }
 
   if (to === myUserId) {
@@ -149,7 +184,7 @@ socket.on('create-private-chat', ({ room, from, to, userFrom, userTo }) => {
       `${userFrom} deseja conversar com você. Aceitar?`
     );
     if (confirmPvtTo) {
-      window.open(`/chat.html?username=${username}&room=${room}`, '_blank');
+      window.location = `/chat.html?username=${username}&room=${room}&roomslist=${roomsListForTheUser}`;
     }
   }
 });
